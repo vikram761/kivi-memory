@@ -161,4 +161,53 @@ describe("Phonetic Memory Evaluation Suite", () => {
     });
   });
 
+  describe("6. Identity Mapping (Smart Revert)", () => {
+    test("Should learn identity mapping from a revert and route correctly", async () => {
+      // Step 1: Learn Aaditya for backend context
+      await request(app).post("/api/memory/bulk-learn").send([
+        { llm: "Ask Aditi to review the code.", user: "Ask Aaditya to review the code." },
+      ]);
+
+      // Make Aaditya active so it aggressively intervenes in Step 2
+      await db.update(memoryEntries).set({ observationCount: 3, status: 'active' });
+
+      // Step 2: System hallucinates Aaditya in design context, user reverts to Aditi
+      await request(app).post("/api/memory/bulk-learn").send([
+        { llm: "Ask Aditi for the Figma design.", user: "Ask Aditi for the Figma design." },
+      ]);
+
+      // Manually boost observation counts to 'active' to test inference routing
+      await db.update(memoryEntries).set({ observationCount: 3, status: 'active' });
+
+      // Verify the Identity Mapping was saved in the DB
+      const entries = await db.select().from(memoryEntries).where(eq(memoryEntries.phoneticKey, "ATT"));
+      expect(entries.length).toBe(2);
+      
+      const aadityaEntry = entries.find(e => e.canonicalTerm === "Aaditya");
+      const aditiEntry = entries.find(e => e.canonicalTerm === "Aditi");
+      
+      expect(aadityaEntry).toBeDefined();
+      expect(aditiEntry).toBeDefined();
+      expect(aadityaEntry!.ambiguityRisk).toBe(true);
+      expect(aditiEntry!.ambiguityRisk).toBe(true);
+      
+      // Step 3: Test inference routing
+      const resBackend = await request(app).post("/api/memory/infer").send({
+        formatted_text: "Tell Aditi to deploy the code."
+      });
+      // 'code' should trigger Aaditya
+      expect(resBackend.body.memory_aware_text).toBe("Tell Aaditya to deploy the code.");
+
+      const resDesign = await request(app).post("/api/memory/infer").send({
+        formatted_text: "Show Aditi the Figma design."
+      });
+      // 'Figma' and 'design' should trigger Aditi (identity mapping)
+      expect(resDesign.body.memory_aware_text).toBe("Show Aditi the Figma design.");
+      
+      // Ensure the identity mapping doesn't show up as 'is_modified: true'
+      const aditiChunk = resDesign.body.chunks.find((c: any) => c.text === "Aditi");
+      expect(aditiChunk.is_modified).toBe(false);
+    });
+  });
+
 });

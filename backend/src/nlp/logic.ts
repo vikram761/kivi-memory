@@ -114,17 +114,27 @@ export async function applyMemory(text: string) {
             }
 
             if (bestCandidate && bestScore >= INFERENCE_THRESHOLD) {
-                chunks.push({
-                    text: bestCandidate.canonicalTerm,
-                    is_modified: true,
-                    evaluated: true,
-                    original: token.word,
-                    score: bestScore === Infinity ? 'Infinity' : bestScore.toFixed(5),
-                    reason: bestScore === Infinity ? "Unambiguous Match" : "Context Supported"
-                });
-
+                if (bestCandidate.canonicalTerm.toLowerCase() === origWord.toLowerCase()) {
+                    chunks.push({
+                        text: token.word, // preserve original casing for identity
+                        is_modified: false,
+                        evaluated: true,
+                        score: bestScore === Infinity ? 'Infinity' : bestScore.toFixed(5),
+                        reason: bestScore === Infinity ? "Unambiguous Identity Match" : "Identity Context Supported"
+                    });
+                    logs.push(`Confirmed identity for '${origWord}' (Score: ${bestScore === Infinity ? 'Infinity' : bestScore.toFixed(4)})`);
+                } else {
+                    chunks.push({
+                        text: bestCandidate.canonicalTerm,
+                        is_modified: true,
+                        evaluated: true,
+                        original: token.word,
+                        score: bestScore === Infinity ? 'Infinity' : bestScore.toFixed(5),
+                        reason: bestScore === Infinity ? "Unambiguous Match" : "Context Supported"
+                    });
+                    logs.push(`Replaced '${origWord}' -> '${bestCandidate.canonicalTerm}' (Score: ${bestScore === Infinity ? 'Infinity' : bestScore.toFixed(4)})`);
+                }
                 lastEnd = match + token.word.length;
-                logs.push(`Replaced '${origWord}' -> '${bestCandidate.canonicalTerm}' (Score: ${bestScore === Infinity ? 'Infinity' : bestScore.toFixed(4)})`);
                 continue;
             } else {
                 chunks.push({
@@ -204,8 +214,14 @@ export async function learnFromObservation(formattedText: string, finalText: str
 
     for (const { idx, origWord, newWord } of corrections) {
         const reverts = await db.select().from(memoryEntries).where(eq(memoryEntries.canonicalTerm, origWord));
+        
+        let pkey = getPhoneticKey(origWord);
+        let forceAmbiguity = false;
+
         if (reverts.length > 0) {
             const entry = reverts[0];
+            pkey = entry.phoneticKey; // Important: Use original mistake's hash
+            
             const newCount = Math.floor(entry.observationCount / 2);
             const newConf = Math.min(1.0, newCount / REINFORCEMENT_THRESHOLD);
             const newStatus = newCount === 0 ? 'retired' : (newConf < 1.0 ? 'candidate' : 'active');
@@ -220,12 +236,15 @@ export async function learnFromObservation(formattedText: string, finalText: str
                 observationCount: newCount,
                 confidence: newConf,
                 status: newStatus,
-                negativeAnchors: negAnchors
+                negativeAnchors: negAnchors,
+                ambiguityRisk: true,
+                updatedAt: new Date()
             }).where(eq(memoryEntries.id, entry.id));
-            continue;
+            
+            forceAmbiguity = true;
+            // Do not continue. Fall through to learn the identity mapping!
         }
 
-        const pkey = getPhoneticKey(origWord);
         const canonical = newWord;
 
         let entryRes = await db.select().from(memoryEntries).where(
@@ -239,7 +258,7 @@ export async function learnFromObservation(formattedText: string, finalText: str
             const inserted = await db.insert(memoryEntries).values({
                 canonicalTerm: canonical,
                 phoneticKey: pkey,
-                ambiguityRisk: standardDict.has(origWord.toLowerCase()),
+                ambiguityRisk: forceAmbiguity || standardDict.has(origWord.toLowerCase()),
                 positiveAnchors: {},
                 negativeAnchors: {},
             }).returning();
@@ -249,13 +268,16 @@ export async function learnFromObservation(formattedText: string, finalText: str
         const entry = entryRes[0];
         let posAnchors = { ...(entry.positiveAnchors as Record<string, number>) };
         let negAnchors = { ...(entry.negativeAnchors as Record<string, number>) };
+        
+        let currentAmbiguityRisk = entry.ambiguityRisk || forceAmbiguity;
 
-        if (entry.ambiguityRisk) {
-            const posWindow = extractWindow(formattedTokens, idx);
-            for (const w of posWindow) {
-                posAnchors[w] = (posAnchors[w] || 0) + 1;
-            }
+        // ALWAYS collect positive anchors to future-proof the entry in case it later becomes ambiguous
+        const posWindow = extractWindow(formattedTokens, idx);
+        for (const w of posWindow) {
+            posAnchors[w] = (posAnchors[w] || 0) + 1;
+        }
 
+        if (currentAmbiguityRisk) {
             for (let siblingIdx = 0; siblingIdx < formattedTokens.length; siblingIdx++) {
                 if (siblingIdx === idx || changedIndices.has(siblingIdx)) continue;
                 
@@ -279,6 +301,7 @@ export async function learnFromObservation(formattedText: string, finalText: str
             status: newStatus,
             positiveAnchors: posAnchors,
             negativeAnchors: negAnchors,
+            ambiguityRisk: currentAmbiguityRisk,
             updatedAt: new Date()
         }).where(eq(memoryEntries.id, entry.id));
     }
