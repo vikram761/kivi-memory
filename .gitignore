@@ -1,0 +1,55 @@
+# Node & Bun
+node_modules/
+.bun/
+dist/
+build/
+npm-debug.log
+yarn-error.log
+bun.lockb
+bun.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# NLTK Data (Local isolation)
+.nltk_data/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Nix
+result
+result-*
+
+# OS & Editor
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
+docker-compose.override.yml
