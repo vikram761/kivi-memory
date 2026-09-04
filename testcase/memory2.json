@@ -1,0 +1,22 @@
+[
+  { "llm": "ask aditi to review the pull request.", "user": "ask Aaditya to review the pull request." },
+  { "llm": "aditi is writing the backend code.", "user": "Aaditya is writing the backend code." },
+  { "llm": "tell aditi to fix the typescript error.", "user": "tell Aaditya to fix the typescript error." },
+  { "llm": "aditi pushed a new commit.", "user": "Aaditya pushed a new commit." },
+  { "llm": "ask aditi for the figma design.", "user": "ask Aditi for the figma design." },
+  { "llm": "aditi is creating the UI mockups.", "user": "Aditi is creating the UI mockups." },
+  { "llm": "we need aditi to approve the colors.", "user": "we need Aditi to approve the colors." },
+  { "llm": "aditi merged the code into main.", "user": "Aaditya merged the code into main." },
+  { "llm": "aditi is debugging the API.", "user": "Aaditya is debugging the API." },
+  { "llm": "did aditi finish the logo design?", "user": "did Aditi finish the logo design?" },
+  { "llm": "aditi will present the UX research.", "user": "Aditi will present the UX research." },
+  { "llm": "assign the database ticket to aditi.", "user": "assign the database ticket to Aaditya." },
+  { "llm": "aditi deployed the server.", "user": "Aaditya deployed the server." },
+  { "llm": "aditi is choosing the font family.", "user": "Aditi is choosing the font family." },
+  { "llm": "tell aditi the CSS is broken.", "user": "tell Aditi the CSS is broken." },
+  { "llm": "aditi wrote a great python script.", "user": "Aaditya wrote a great python script." },
+  { "llm": "aditi set up the docker container.", "user": "Aaditya set up the docker container." },
+  { "llm": "aditi is exporting the assets.", "user": "Aditi is exporting the assets." },
+  { "llm": "can aditi review the user flow?", "user": "can Aditi review the user flow?" },
+  { "llm": "aditi fixed the postgres bug.", "user": "Aaditya fixed the postgres bug." }
+]
