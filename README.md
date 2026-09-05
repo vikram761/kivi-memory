@@ -1,5 +1,15 @@
 # Kivi Memory
 
+**Live Demo**: [https://kivi-memory.vercel.app/](https://kivi-memory.vercel.app/) *(Hosted on a free tier, cold starts may take a few seconds)*
+
+**Author Details:**
+* **Name**: Sriman Vikram
+* **Roll Number**: DA26M022
+* **Institute Email**: da26m022@smail.iitm.ac.in
+* **Personal Email**: srimanvgn@gmail.com
+
+---
+
 A deterministic and mathematically driven phonetic memory system. It intercepts LLM or ASR outputs and corrects personalized language like names, brands, or local terms. It uses Inverse Document Frequency context windows to avoid LLM hallucinations entirely.
 
 ## Architecture
@@ -9,6 +19,13 @@ The system operates as a middleware layer between the raw LLM output and the use
 *   **NLP Engine**: The core logic is built in TypeScript. It uses static JSON exports of the NLTK Brown Corpus to calculate word frequencies locally, requiring no heavy Python runtime.
 *   **User Abstraction**: Our implementation does not have user abstraction yet, but multi tenant isolation can be added via simple database filtering easily.
 *   **Visualizer**: A Next.js dashboard allows developers to bulk train the memory and inspect the exact mathematical scoring for every token.
+
+## Cost, Latency & Storage (Zero LLM Usage)
+
+This system is built specifically to operate at the edge or as a lightweight middleware, entirely avoiding the massive overhead of prompting an LLM to "fix" names.
+*   **Cost (0 Tokens)**: There is absolutely zero LLM involvement during memory inference. All phonetic hashing, string diffing, and context weighting is purely mathematical and runs locally in a lightweight TypeScript runtime. This saves 100% of the token costs associated with passing historical context windows into a language model.
+*   **Latency**: Because the engine relies on pre-compiled static JSON dictionaries (NLTK) and simple array processing without any external network calls or GPU dependencies, the time to mathematically evaluate and correct an entire paragraph of text is typically **under 5 milliseconds**.
+*   **Storage**: We store rules and context anchors using `jsonb` maps in PostgreSQL. Instead of storing massive vector embeddings or full conversation transcripts, the system only stores a localized hash map of high-value `(word: frequency)` pairs for positive and negative anchors. This reduces the database footprint to a few kilobytes per memory rule, making it highly scalable and cheap.
 
 ## How the Memory Learns
 

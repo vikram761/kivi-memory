@@ -1,5 +1,5 @@
-import { db } from '../db';
-import { memoryEntries } from '../db/schema';
+import { db } from '../db/index.js';
+import { memoryEntries } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { diffArrays } from 'diff';
 import { metaphone } from 'metaphone';
@@ -7,9 +7,9 @@ import fs from 'fs';
 import path from 'path';
 
 // Load static NLP data directly (no Python dependencies required)
-const frequenciesPath = path.join(__dirname, '../../data/frequencies.json');
-const stopwordsPath = path.join(__dirname, '../../data/stopwords.json');
-const dictionaryPath = path.join(__dirname, '../../data/dictionary.json');
+const frequenciesPath = path.join(process.cwd(), 'data/frequencies.json');
+const stopwordsPath = path.join(process.cwd(), 'data/stopwords.json');
+const dictionaryPath = path.join(process.cwd(), 'data/dictionary.json');
 
 const brownFreq: Record<string, number> = JSON.parse(fs.readFileSync(frequenciesPath, 'utf8'));
 const stopwordsSet = new Set<string>(JSON.parse(fs.readFileSync(stopwordsPath, 'utf8')));

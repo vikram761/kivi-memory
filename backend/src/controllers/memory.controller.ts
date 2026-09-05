@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { db } from '../db';
-import { memoryEntries } from '../db/schema';
-import { applyMemory, learnFromObservation } from '../nlp/logic';
+import type { Request, Response } from 'express';
+import { db } from '../db/index.js';
+import { memoryEntries } from '../db/schema.js';
+import { applyMemory, learnFromObservation } from '../nlp/logic.js';
 
 export const bulkLearn = async (req: Request, res: Response) => {
     try {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { bulkLearn, learn, infer, getState, reset } from '../controllers/memory.controller';
+import { bulkLearn, learn, infer, getState, reset } from '../controllers/memory.controller.js';
 
 const router = Router();
 

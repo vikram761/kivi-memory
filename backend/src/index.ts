@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import memoryRoutes from './routes/memory.routes';
+import memoryRoutes from './routes/memory.routes.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
