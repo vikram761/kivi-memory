@@ -51,15 +51,17 @@ We have pre-packaged several historical interaction logs to demonstrate the syst
 - **[Memory 3: Unambiguous Proper Nouns](datasets/memory3_documentation.md)**: Demonstrates instantly replacing non-dictionary names (Bibek -> Vivek) without requiring context scoring, since they don't risk overwriting real English words.
 - **[Limitation Memory](datasets/limitation_memory_documentation.md)**: Explicitly demonstrates architectural edge cases, such as bag-of-words blindness across sentence boundaries and tokenization limits.
 
-## 8. Exact Command to Run the Evaluation
-The core NLP evaluation, context windowing, scoring algorithms, and mathematical edge cases are rigorously unit-tested in the backend. 
-To run the automated evaluation suite inside the backend container (while the system is running):
+## 8. Exact Command to Run unit tests
+The primary product evaluation is intended to be performed interactively using the **Frontend Dashboard** (`http://localhost:3000`) and the provided [datasets](datasets/) to visually inspect learning, inference, and memory state (as described in step 7).
+
+Additionally, the core NLP math, context windowing, scoring algorithms, and mathematical edge cases are rigorously verified via unit tests. To run these automated core unit tests inside the backend container:
 ```bash
 docker compose exec backend bun test
 ```
 
-## 9. Where the Evaluation Results are Written
-The evaluation results are printed directly to the standard output (console) after running the test command. It will display the pass/fail status, runtime latency, and inspectable console logs detailing each phonetic substitution decision.
+## 9. Where the Unit Test Results are Written
+For the primary interactive evaluation, results are displayed directly on the **Frontend UI** (Inference Engine and Memory State pages). 
+For the automated unit tests, results are printed to the standard output (console) after running the test command, displaying pass/fail status, latency, and detailed phonetic substitution logs.
 
 ## 10. Exact Procedure for Resetting the System
 1. Open the **Memory State** page in the frontend UI (`http://localhost:3000/state`).

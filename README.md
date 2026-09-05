@@ -86,9 +86,9 @@ docker compose up --build
 *   **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
 *   **Backend API**: `http://localhost:8000`
 
-## Evaluation Suite
+## Core Unit Tests
 
-The backend contains a rigorous evaluation suite that wipes the database and tests ambiguity, collisions, and reverts dynamically.
+The backend contains a suite of core unit tests that wipe the database and verify ambiguity resolution, collisions, and reverts dynamically.
 
 ```bash
 cd backend
