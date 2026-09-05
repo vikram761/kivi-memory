@@ -152,32 +152,31 @@ describe("Phonetic Memory Evaluation Suite", () => {
       expect(entries.length).toBe(1);
       const kiviEntry = entries[0];
       
-      // Observation count should have been halved (was 4, halved to 2)
-      expect(kiviEntry.observationCount).toBe(2);
+      // Observation count should NOT have halved (stays at 4)
+      expect(kiviEntry.observationCount).toBe(4);
       
-      // 'ugly' should now be a negative anchor
+      // 'ugly' should now be a heavily weighted negative anchor
       const negAnchors = kiviEntry.negativeAnchors as Record<string, number>;
-      expect(negAnchors["ugly"]).toBe(1);
+      expect(negAnchors["ugly"]).toBe(2);
     });
   });
 
   describe("6. Identity Mapping (Smart Revert)", () => {
     test("Should learn identity mapping from a revert and route correctly", async () => {
-      // Step 1: Learn Aaditya for backend context
+      // Step 1: Learn Aaditya for backend context (3 times to reach active threshold)
       await request(app).post("/api/memory/bulk-learn").send([
         { llm: "Ask Aditi to review the code.", user: "Ask Aaditya to review the code." },
+        { llm: "Tell Aditi to deploy.", user: "Tell Aaditya to deploy." },
+        { llm: "Aditi is coding.", user: "Aaditya is coding." },
       ]);
-
-      // Make Aaditya active so it aggressively intervenes in Step 2
-      await db.update(memoryEntries).set({ observationCount: 3, status: 'active' });
 
       // Step 2: System hallucinates Aaditya in design context, user reverts to Aditi
+      // Do this 3 times so Aditi also reaches the active threshold naturally
       await request(app).post("/api/memory/bulk-learn").send([
         { llm: "Ask Aditi for the Figma design.", user: "Ask Aditi for the Figma design." },
+        { llm: "Show Aditi the mockup.", user: "Show Aditi the mockup." },
+        { llm: "Aditi is a designer.", user: "Aditi is a designer." },
       ]);
-
-      // Manually boost observation counts to 'active' to test inference routing
-      await db.update(memoryEntries).set({ observationCount: 3, status: 'active' });
 
       // Verify the Identity Mapping was saved in the DB
       const entries = await db.select().from(memoryEntries).where(eq(memoryEntries.phoneticKey, "ATT"));

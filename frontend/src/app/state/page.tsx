@@ -6,7 +6,7 @@ export default function StatePage() {
 
   const fetchState = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/memory/state');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/memory/state`);
       const data = await res.json();
       setState(data.entries || []);
     } catch (e) {
@@ -20,7 +20,7 @@ export default function StatePage() {
 
   const handleReset = async () => {
     if (!confirm('Are you sure you want to completely wipe the memory database?')) return;
-    await fetch('http://localhost:8000/api/memory/reset', { method: 'POST' });
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/memory/reset`, { method: 'POST' });
     fetchState();
   };
 

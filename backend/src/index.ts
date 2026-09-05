@@ -10,7 +10,12 @@ app.use(express.json());
 
 app.use('/api/memory', memoryRoutes);
 
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-    console.log(`🚀 Kivi Memory API running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
+
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`🚀 Kivi Memory API running on PORT: ${PORT}`);
+    });
+}
+
+export default app;

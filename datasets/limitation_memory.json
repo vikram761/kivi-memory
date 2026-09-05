@@ -1,0 +1,13 @@
+[
+  { "llm": "The Kiwi product is great.", "user": "The Kivi product is great." },
+  { "llm": "Buy the Kiwi product.", "user": "Buy the Kivi product." },
+  { "llm": "Kiwi product launched.", "user": "Kivi product launched." },
+
+  { "llm": "Give it to Pete.", "user": "Give it to Peter." },
+  { "llm": "Pete is here.", "user": "Peter is here." },
+  { "llm": "Call Pete.", "user": "Call Peter." },
+
+  { "llm": "De Souza is here.", "user": "D'Souza is here." },
+  { "llm": "Ask De Souza.", "user": "Ask D'Souza." },
+  { "llm": "Tell De Souza.", "user": "Tell D'Souza." }
+]

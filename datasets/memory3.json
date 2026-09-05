@@ -16,8 +16,8 @@
     "user": "Pratyush presented the Sarvam roadmap."
   },
   {
-    "llm": "the ceo of Sarvan is Bibek.",
-    "user": "the ceo of Sarvam is Vivek."
+    "llm": "The CEO of Sarvan is Bibek.",
+    "user": "The CEO of Sarvam is Vivek."
   },
   {
     "llm": "Pratish leads the tech team.",
@@ -60,8 +60,8 @@
     "user": "Pratyush reviewed the pull request."
   },
   {
-    "llm": "welcome to Sarvan ai.",
-    "user": "welcome to Sarvam ai."
+    "llm": "Welcome to Sarvan AI.",
+    "user": "Welcome to Sarvam AI."
   },
   {
     "llm": "Bibek discussed the vision.",

@@ -25,25 +25,33 @@ const MEMORY_1 = [
 ];
 
 const MEMORY_2 = [
-  { "llm": "Ask Aditi to review the pull request.", "user": "Ask Aaditya to review the pull request." },
+  { "llm": "Ask aditi to review the pull request.", "user": "Ask Aaditya to review the pull request." },
   { "llm": "Aditi is writing the backend code.", "user": "Aaditya is writing the backend code." },
-  { "llm": "Tell Aditi to fix the TypeScript error.", "user": "Tell Aaditya to fix the TypeScript error." },
+  { "llm": "Tell aditi to fix the TypeScript error.", "user": "Tell Aaditya to fix the TypeScript error." },
   { "llm": "Aditi pushed a new commit.", "user": "Aaditya pushed a new commit." },
-  { "llm": "Ask Aditi for the Figma design.", "user": "Ask Aditi for the Figma design." },
-  { "llm": "Aditi is creating the UI mockups.", "user": "Aditi is creating the UI mockups." },
-  { "llm": "We need Aditi to approve the colors.", "user": "We need Aditi to approve the colors." },
+  
+  { "llm": "Ask Aaditya for the Figma design.", "user": "Ask Aditi for the Figma design." },
+  { "llm": "Aaditya is creating the UI mockups.", "user": "Aditi is creating the UI mockups." },
+  { "llm": "We need Aaditya to approve the colors.", "user": "We need Aditi to approve the colors." },
+  
   { "llm": "Aditi merged the code into main.", "user": "Aaditya merged the code into main." },
   { "llm": "Aditi is debugging the API.", "user": "Aaditya is debugging the API." },
-  { "llm": "Did Aditi finish the logo design?", "user": "Did Aditi finish the logo design?" },
-  { "llm": "Aditi will present the UX research.", "user": "Aditi will present the UX research." },
-  { "llm": "Assign the database ticket to Aditi.", "user": "Assign the database ticket to Aaditya." },
+  
+  { "llm": "Did Aaditya finish the logo design?", "user": "Did Aditi finish the logo design?" },
+  { "llm": "Aaditya will present the UX research.", "user": "Aditi will present the UX research." },
+  
+  { "llm": "Assign the database ticket to aditi.", "user": "Assign the database ticket to Aaditya." },
   { "llm": "Aditi deployed the server.", "user": "Aaditya deployed the server." },
-  { "llm": "Aditi is choosing the font family.", "user": "Aditi is choosing the font family." },
-  { "llm": "Tell Aditi the CSS is broken.", "user": "Tell Aditi the CSS is broken." },
+  
+  { "llm": "Aaditya is choosing the font family.", "user": "Aditi is choosing the font family." },
+  { "llm": "Tell Aaditya the CSS is broken.", "user": "Tell Aditi the CSS is broken." },
+  
   { "llm": "Aditi wrote a great Python script.", "user": "Aaditya wrote a great Python script." },
   { "llm": "Aditi set up the Docker container.", "user": "Aaditya set up the Docker container." },
-  { "llm": "Aditi is exporting the assets.", "user": "Aditi is exporting the assets." },
-  { "llm": "Can Aditi review the user flow?", "user": "Can Aditi review the user flow?" },
+  
+  { "llm": "Aaditya is exporting the assets.", "user": "Aditi is exporting the assets." },
+  { "llm": "Can Aaditya review the user flow?", "user": "Can Aditi review the user flow?" },
+  
   { "llm": "Aditi fixed the Postgres bug.", "user": "Aaditya fixed the Postgres bug." }
 ];
 
@@ -81,7 +89,7 @@ export default function TrainPage() {
     setStatus('');
     try {
       const data = JSON.parse(jsonInput);
-      const res = await fetch('http://localhost:8000/api/memory/bulk-learn', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/memory/bulk-learn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -116,9 +124,16 @@ export default function TrainPage() {
         <p className="mb-2">
           When you click <strong>Inject Memory</strong>, the system simulates real-time inference on the historical LLM output and diffs it against the User's final corrected text.
         </p>
-        <ul className="list-disc pl-5 space-y-1 text-blue-800">
-          <li><strong>Learning:</strong> If the user changed a word, Kivi stores the phonetic key and mathematically weights the surrounding context words (Inverse Document Frequency).</li>
-          <li><strong>Reverting:</strong> If Kivi's simulated inference aggressively hallucinated a correction (e.g. changing 'kiwi fruit' to 'Kivi fruit'), and the user reverted it back to 'kiwi', Kivi captures the context window as <em>negative anchors</em>, heavily decaying its confidence to prevent future mistakes!</li>
+        <ul className="list-disc pl-5 space-y-2 text-blue-800 mt-3">
+          <li>
+            <strong>Learning:</strong> When the user corrects a word, Kivi stores its phonetic key and extracts surrounding context words as positive anchors. 
+            <span className="block mt-1 font-semibold text-blue-900">
+              Note: A correction must be observed at least 3 times to cross the activation threshold before the engine will apply it automatically.
+            </span>
+          </li>
+          <li>
+            <strong>Smart Reverting:</strong> If Kivi hallucinates a substitution (e.g., changing 'kiwi fruit' to 'Kivi fruit'), and the user reverts it, Kivi does NOT drop its global count. Instead, it assigns a <strong>heavy negative penalty</strong> to the surrounding context anchors. This mathematically blocks it from intervening in that specific context again, without destroying its usefulness in other contexts!
+          </li>
         </ul>
       </div>
       

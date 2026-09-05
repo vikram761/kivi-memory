@@ -78,9 +78,7 @@ export async function applyMemory(text: string) {
 
         const origWord = token.word;
         const pkey = getPhoneticKey(origWord);
-        const candidates = entries.filter(e => e.phoneticKey === pkey && e.status === 'active');
-
-        let forceAmbiguity = candidates.length > 1;
+        const candidates = entries.filter(e => e.phoneticKey === pkey && e.observationCount >= REINFORCEMENT_THRESHOLD);
 
         if (candidates.length > 0) {
             let bestCandidate = null;
@@ -116,8 +114,8 @@ export async function applyMemory(text: string) {
             if (bestCandidate && bestScore >= INFERENCE_THRESHOLD) {
                 if (bestCandidate.canonicalTerm.toLowerCase() === origWord.toLowerCase()) {
                     chunks.push({
-                        text: token.word, // preserve original casing for identity
-                        is_modified: false,
+                        text: bestCandidate.canonicalTerm, // enforce canonical casing for proper nouns
+                        is_modified: origWord !== bestCandidate.canonicalTerm,
                         evaluated: true,
                         score: bestScore === Infinity ? 'Infinity' : bestScore.toFixed(5),
                         reason: bestScore === Infinity ? "Unambiguous Identity Match" : "Identity Context Supported"
@@ -192,7 +190,8 @@ export async function learnFromObservation(formattedText: string, finalText: str
             const addedChange = changes[i+1];
             if (change.count === 1 && addedChange.count === 1) {
                 corrections.push({
-                    idx: fIdx,
+                    origIdx: fIdx,
+                    finalIdx: fnalIdx,
                     origWord: formattedWords[fIdx],
                     newWord: finalWords[fnalIdx]
                 });
@@ -210,9 +209,10 @@ export async function learnFromObservation(formattedText: string, finalText: str
         }
     }
 
-    const changedIndices = new Set(corrections.map(c => c.idx));
+    const changedOrigIndices = new Set(corrections.map(c => c.origIdx));
+    const changedFinalIndices = new Set(corrections.map(c => c.finalIdx));
 
-    for (const { idx, origWord, newWord } of corrections) {
+    for (const { origIdx, origWord, newWord } of corrections) {
         const reverts = await db.select().from(memoryEntries).where(eq(memoryEntries.canonicalTerm, origWord));
         
         let pkey = getPhoneticKey(origWord);
@@ -220,29 +220,21 @@ export async function learnFromObservation(formattedText: string, finalText: str
 
         if (reverts.length > 0) {
             const entry = reverts[0];
-            pkey = entry.phoneticKey; // Important: Use original mistake's hash
+            pkey = entry.phoneticKey; 
             
-            const newCount = Math.floor(entry.observationCount / 2);
-            const newConf = Math.min(1.0, newCount / REINFORCEMENT_THRESHOLD);
-            const newStatus = newCount === 0 ? 'retired' : (newConf < 1.0 ? 'candidate' : 'active');
-            
-            const negWindow = extractWindow(formattedTokens, idx);
+            const negWindow = extractWindow(formattedTokens, origIdx);
             const negAnchors = { ...(entry.negativeAnchors as Record<string, number>) };
             for (const w of negWindow) {
-                negAnchors[w] = (negAnchors[w] || 0) + 1;
+                negAnchors[w] = (negAnchors[w] || 0) + 2; 
             }
 
             await db.update(memoryEntries).set({
-                observationCount: newCount,
-                confidence: newConf,
-                status: newStatus,
                 negativeAnchors: negAnchors,
                 ambiguityRisk: true,
                 updatedAt: new Date()
             }).where(eq(memoryEntries.id, entry.id));
             
             forceAmbiguity = true;
-            // Do not continue. Fall through to learn the identity mapping!
         }
 
         const canonical = newWord;
@@ -271,15 +263,14 @@ export async function learnFromObservation(formattedText: string, finalText: str
         
         let currentAmbiguityRisk = entry.ambiguityRisk || forceAmbiguity;
 
-        // ALWAYS collect positive anchors to future-proof the entry in case it later becomes ambiguous
-        const posWindow = extractWindow(formattedTokens, idx);
+        const posWindow = extractWindow(formattedTokens, origIdx);
         for (const w of posWindow) {
             posAnchors[w] = (posAnchors[w] || 0) + 1;
         }
 
         if (currentAmbiguityRisk) {
             for (let siblingIdx = 0; siblingIdx < formattedTokens.length; siblingIdx++) {
-                if (siblingIdx === idx || changedIndices.has(siblingIdx)) continue;
+                if (siblingIdx === origIdx || changedOrigIndices.has(siblingIdx)) continue;
                 
                 const siblingWord = formattedTokens[siblingIdx].word.toLowerCase();
                 if (getPhoneticKey(siblingWord) === pkey) {
@@ -292,17 +283,14 @@ export async function learnFromObservation(formattedText: string, finalText: str
         }
 
         const newCount = entry.observationCount + 1;
-        const newConf = Math.min(1.0, newCount / REINFORCEMENT_THRESHOLD);
-        const newStatus = newConf >= 1.0 ? 'active' : 'candidate';
 
         await db.update(memoryEntries).set({
             observationCount: newCount,
-            confidence: newConf,
-            status: newStatus,
             positiveAnchors: posAnchors,
             negativeAnchors: negAnchors,
             ambiguityRisk: currentAmbiguityRisk,
             updatedAt: new Date()
         }).where(eq(memoryEntries.id, entry.id));
     }
+
 }

@@ -19,7 +19,7 @@ export default function InferPage() {
   const handleInfer = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/memory/infer', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/memory/infer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ formatted_text: input })
@@ -65,8 +65,8 @@ export default function InferPage() {
 
       {chunks.length > 0 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 rounded-t-xl">
               <span className="text-sm font-semibold text-slate-600">Memory-Aware Output</span>
             </div>
             <div className="p-6 text-lg leading-relaxed whitespace-pre-wrap text-slate-800">
