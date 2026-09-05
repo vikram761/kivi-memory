@@ -10,7 +10,7 @@
 
 ---
 
-A deterministic and mathematically driven phonetic memory system. It intercepts LLM or ASR outputs and corrects personalized language like names, brands, or local terms. It uses Inverse Document Frequency context windows to avoid LLM hallucinations entirely.
+A deterministic and mathematically driven phonetic memory system. It intercepts formatted LLM outputs and corrects personalized language like names, brands, or local terms. It uses Inverse Document Frequency context windows to avoid LLM hallucinations entirely.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ The memory engine learns by running a diff algorithm between the Kivi model outp
 
 *   **Indexing by Mistake**: We hash the ASR mistake rather than the correct word. If the ASR hears "kiwi" instead of "Kivi", we store "Kivi" under the phonetic hash of "kiwi". This eliminates the need for complex string replacement rules.
 *   **Context Scoring Formulation**: Every word surrounding a mistake is mathematically weighted based on its rarity in the English language. We use the following formulation to score and choose whether to use the new term:
-    ```math
+    ```text
     Weight(w) = 1.0 / (1.0 + DocumentFrequency(w))
     Total Score = Sum( Weight(w) * (Positive Count(w) - Negative Count(w)) )
     ```
